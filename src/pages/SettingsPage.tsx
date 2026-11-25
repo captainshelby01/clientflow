@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
 import { CurrencyCode } from '../types/crm';
@@ -17,14 +17,25 @@ export const SettingsPage: React.FC = () => {
   const [monthlyRevenueTarget, setMonthlyRevenueTarget] = useState(settings.monthlyRevenueTarget);
   const [confirmReset, setConfirmReset] = useState(false);
 
+  useEffect(() => {
+    setOwnerName(settings.ownerName);
+    setOwnerRole(settings.ownerRole);
+    setOwnerEmail(settings.ownerEmail);
+    setWorkspaceName(settings.workspaceName);
+    setCurrency(settings.currency);
+    setTimezone(settings.timezone);
+    setDefaultFollowUpDays(settings.defaultFollowUpDays);
+    setMonthlyRevenueTarget(settings.monthlyRevenueTarget);
+  }, [settings]);
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings({
-      ownerName: ownerName.trim() || 'Alex Okafor',
-      ownerInitials: getInitials(ownerName.trim() || 'Alex Okafor'),
+      ownerName: ownerName.trim() || 'Oluwafemi Olukoyi',
+      ownerInitials: getInitials(ownerName.trim() || 'Oluwafemi Olukoyi'),
       ownerRole: ownerRole.trim() || 'Principal Consultant',
-      ownerEmail: ownerEmail.trim() || 'alex@alexstudio.co',
-      workspaceName: workspaceName.trim() || 'Alex Studio',
+      ownerEmail: ownerEmail.trim() || 'olukoyioluwafemi100@gmail.com',
+      workspaceName: workspaceName.trim() || 'Oluwafemi Studio',
       currency,
       timezone,
       defaultFollowUpDays: Math.max(1, Number(defaultFollowUpDays) || 3),
@@ -134,7 +145,7 @@ export const SettingsPage: React.FC = () => {
               <option value="EST (New York)">EST (New York)</option>
               <option value="PST (San Francisco)">PST (San Francisco)</option>
               <option value="CET (Berlin / Paris)">CET (Berlin / Paris)</option>
-              <option value="WAT (Lagos)">WAT (Lagos)</option>
+              <option value="WAT (Lagos) / GMT+1">WAT (Lagos) / GMT+1</option>
             </select>
           </div>
 

@@ -49,7 +49,7 @@ export const DashboardPage: React.FC = () => {
   const openTasks = tasks.filter((t) => !t.completed);
   const dueTodayTasksCount = openTasks.filter((t) => t.dueDate <= TODAY_ISO).length;
 
-  const firstName = settings.ownerName.split(' ')[0] || 'Alex';
+  const firstName = settings.ownerName.split(' ')[0] || 'Oluwafemi';
 
   return (
     <div className="space-y-6">
@@ -90,77 +90,79 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified 5-Metric Executive KPI Bar */}
-      <div className="bg-white border border-[#E5E2DC] rounded-[10px] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-[#ECEAE4] overflow-hidden">
-        <button
-          type="button"
-          onClick={() => navigateTo('clients')}
-          className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer"
-        >
-          <div className="text-xs font-medium text-[#525866]">Total clients</div>
-          <div className="text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
-            {totalClients}
-          </div>
-          <div className="text-[11.5px] text-[#7A808D] mt-1 tabular-nums">
-            {activeClientsCount} active or retainer
-          </div>
-        </button>
+      {/* Unified 5-Metric Executive KPI Bar with crisp 375px & desktop border math */}
+      <div className="bg-white border border-[#E5E2DC] rounded-[10px] overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-5 -mr-px -mb-px">
+          <button
+            type="button"
+            onClick={() => navigateTo('clients')}
+            className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer border-r border-b border-[#ECEAE4]"
+          >
+            <div className="text-xs font-medium text-[#525866]">Total clients</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
+              {totalClients}
+            </div>
+            <div className="text-[11.5px] text-[#7A808D] mt-1 tabular-nums">
+              {activeClientsCount} active or retainer
+            </div>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => navigateTo('projects')}
-          className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer border-l border-[#ECEAE4] sm:border-l-0"
-        >
-          <div className="text-xs font-medium text-[#525866]">Active projects</div>
-          <div className="text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
-            {activeProjects.length}
-          </div>
-          <div className="text-[11.5px] text-[#B4690E] mt-1 tabular-nums">
-            {dueSoonProjects} due within 10 days
-          </div>
-        </button>
+          <button
+            type="button"
+            onClick={() => navigateTo('projects')}
+            className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer border-r border-b border-[#ECEAE4]"
+          >
+            <div className="text-xs font-medium text-[#525866]">Active projects</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
+              {activeProjects.length}
+            </div>
+            <div className="text-[11.5px] text-[#B4690E] mt-1 tabular-nums">
+              {dueSoonProjects} due within 10 days
+            </div>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => navigateTo('leads')}
-          className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer"
-        >
-          <div className="text-xs font-medium text-[#525866]">Open leads</div>
-          <div className="text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
-            {openLeads.length}
-          </div>
-          <div className="text-[11.5px] text-[#7A808D] mt-1 tabular-nums">
-            {leads.filter((l) => l.stage === 'Negotiation').length} in negotiation
-          </div>
-        </button>
+          <button
+            type="button"
+            onClick={() => navigateTo('leads')}
+            className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer border-r border-b border-[#ECEAE4]"
+          >
+            <div className="text-xs font-medium text-[#525866]">Open leads</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
+              {openLeads.length}
+            </div>
+            <div className="text-[11.5px] text-[#7A808D] mt-1 tabular-nums">
+              {leads.filter((l) => l.stage === 'Negotiation').length} in negotiation
+            </div>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => navigateTo('leads')}
-          className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer border-l border-[#ECEAE4] sm:border-l-0"
-        >
-          <div className="text-xs font-medium text-[#525866]">Pipeline value</div>
-          <div className="text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
-            {formatCurrency(pipelineValue, settings.currency, true)}
-          </div>
-          <div className="text-[11.5px] text-[#7A808D] mt-1 tabular-nums">
-            {formatCurrency(pipelineValue, settings.currency)} total open
-          </div>
-        </button>
+          <button
+            type="button"
+            onClick={() => navigateTo('leads')}
+            className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer border-r border-b border-[#ECEAE4]"
+          >
+            <div className="text-xs font-medium text-[#525866]">Pipeline value</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
+              {formatCurrency(pipelineValue, settings.currency, true)}
+            </div>
+            <div className="text-[11.5px] text-[#7A808D] mt-1 tabular-nums truncate">
+              {formatCurrency(pipelineValue, settings.currency)} total open
+            </div>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => navigateTo('reports')}
-          className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer col-span-2 sm:col-span-2 lg:col-span-1"
-        >
-          <div className="text-xs font-medium text-[#525866]">Monthly revenue</div>
-          <div className="text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
-            {formatCurrency(currentMonth.revenue, settings.currency, true)}
-          </div>
-          <div className="text-[11.5px] text-emerald-700 mt-1 tabular-nums">
-            {monthlyGrowthPct >= 0 ? `+${monthlyGrowthPct}%` : `${monthlyGrowthPct}%`} vs October
-          </div>
-        </button>
+          <button
+            type="button"
+            onClick={() => navigateTo('reports')}
+            className="p-4 sm:p-5 text-left hover:bg-[#FAF9F6] transition-colors cursor-pointer border-r border-b border-[#ECEAE4] col-span-2 lg:col-span-1"
+          >
+            <div className="text-xs font-medium text-[#525866]">Monthly revenue</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#1A1D24] font-display tabular-nums mt-1.5">
+              {formatCurrency(currentMonth.revenue, settings.currency, true)}
+            </div>
+            <div className="text-[11.5px] text-emerald-700 mt-1 tabular-nums">
+              {monthlyGrowthPct >= 0 ? `+${monthlyGrowthPct}%` : `${monthlyGrowthPct}%`} vs October
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Charts Row */}

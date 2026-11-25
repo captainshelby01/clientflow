@@ -18,6 +18,7 @@ import { AddLeadModal } from './components/modals/AddLeadModal';
 import { AddClientModal } from './components/modals/AddClientModal';
 import { ScheduleFollowUpModal } from './components/modals/ScheduleFollowUpModal';
 import { LeadDetailDrawer } from './components/modals/LeadDetailDrawer';
+import { AboutProjectModal } from './components/modals/AboutProjectModal';
 
 const WorkspaceRouter: React.FC = () => {
   const { activeSection, selectedClientId } = useCRM();
@@ -54,6 +55,7 @@ const WorkspaceRouter: React.FC = () => {
       <AddClientModal />
       <ScheduleFollowUpModal />
       <LeadDetailDrawer />
+      <AboutProjectModal />
     </Layout>
   );
 };

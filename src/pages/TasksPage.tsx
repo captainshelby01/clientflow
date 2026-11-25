@@ -210,7 +210,7 @@ export const TasksPage: React.FC = () => {
           return (
             <div
               key={task.id}
-              className="px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-[#FAF9F6] transition-colors"
+              className="px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 hover:bg-[#FAF9F6] transition-colors"
             >
               <div className="flex items-start gap-3.5 min-w-0 flex-1">
                 <button
@@ -266,8 +266,8 @@ export const TasksPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 shrink-0">
-                <div className="text-right tabular-nums">
+              <div className="flex items-center justify-between sm:justify-end gap-4 pl-7 sm:pl-0 shrink-0">
+                <div className="sm:text-right tabular-nums">
                   <div
                     className={`text-xs ${
                       isOverdue ? 'text-[#B4690E] font-semibold' : 'text-[#525866]'

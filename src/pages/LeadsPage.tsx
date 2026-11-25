@@ -87,29 +87,31 @@ export const LeadsPage: React.FC = () => {
       </div>
 
       {/* Pipeline Summary Bar */}
-      <div className="bg-white border border-[#E5E2DC] rounded-[10px] grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 sm:divide-x divide-[#ECEAE4]">
-        <div className="p-4 sm:px-5">
-          <div className="text-xs text-[#7A808D]">Open pipeline</div>
-          <div className="text-xl font-bold font-display tabular-nums text-[#1A1D24] mt-1">
-            {formatCurrency(openPipelineVal, settings.currency)}
+      <div className="bg-white border border-[#E5E2DC] rounded-[10px] overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-4 -mr-px -mb-px">
+          <div className="p-4 sm:px-5 border-r border-b border-[#ECEAE4]">
+            <div className="text-xs text-[#7A808D]">Open pipeline</div>
+            <div className="text-lg sm:text-xl font-bold font-display tabular-nums text-[#1A1D24] mt-1">
+              {formatCurrency(openPipelineVal, settings.currency)}
+            </div>
           </div>
-        </div>
-        <div className="p-4 sm:px-5 border-l border-[#ECEAE4] sm:border-l-0">
-          <div className="text-xs text-[#7A808D]">Weighted forecast</div>
-          <div className="text-xl font-bold font-display tabular-nums text-[#1A1D24] mt-1">
-            {formatCurrency(Math.round(weightedForecast), settings.currency)}
+          <div className="p-4 sm:px-5 border-r border-b border-[#ECEAE4]">
+            <div className="text-xs text-[#7A808D]">Weighted forecast</div>
+            <div className="text-lg sm:text-xl font-bold font-display tabular-nums text-[#1A1D24] mt-1">
+              {formatCurrency(Math.round(weightedForecast), settings.currency)}
+            </div>
           </div>
-        </div>
-        <div className="p-4 sm:px-5">
-          <div className="text-xs text-[#7A808D]">Active deals</div>
-          <div className="text-xl font-bold font-display tabular-nums text-[#1A1D24] mt-1">
-            {openDeals.length}
+          <div className="p-4 sm:px-5 border-r border-b border-[#ECEAE4]">
+            <div className="text-xs text-[#7A808D]">Active deals</div>
+            <div className="text-lg sm:text-xl font-bold font-display tabular-nums text-[#1A1D24] mt-1">
+              {openDeals.length}
+            </div>
           </div>
-        </div>
-        <div className="p-4 sm:px-5 border-l border-[#ECEAE4] sm:border-l-0">
-          <div className="text-xs text-[#7A808D]">Win rate</div>
-          <div className="text-xl font-bold font-display tabular-nums text-emerald-700 mt-1">
-            {winRate}%
+          <div className="p-4 sm:px-5 border-r border-b border-[#ECEAE4]">
+            <div className="text-xs text-[#7A808D]">Win rate</div>
+            <div className="text-lg sm:text-xl font-bold font-display tabular-nums text-emerald-700 mt-1">
+              {winRate}%
+            </div>
           </div>
         </div>
       </div>
@@ -170,6 +172,37 @@ export const LeadsPage: React.FC = () => {
           </select>
         </div>
       </div>
+
+      {filteredLeads.length === 0 && (
+        <div className="bg-white border border-[#E5E2DC] rounded-[10px] py-10 px-4 text-center">
+          <div className="text-sm font-semibold text-[#1A1D24]">
+            No leads match your current filter
+          </div>
+          <p className="text-xs text-[#7A808D] mt-1">
+            Clear your search or stage filter, or add a new opportunity to the pipeline.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setSourceFilter('All');
+                setLeadStageFilter('All');
+              }}
+              className="px-3.5 py-1.5 text-xs font-medium bg-white border border-[#E5E2DC] text-[#1A1D24] rounded-lg hover:bg-[#FAF9F6] cursor-pointer"
+            >
+              Reset filters
+            </button>
+            <button
+              type="button"
+              onClick={openAddLeadModal}
+              className="px-3.5 py-1.5 text-xs font-medium bg-[#13233A] text-white rounded-lg hover:bg-[#1D3454] cursor-pointer"
+            >
+              Add Lead
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 6-Column Kanban Board */}
       <div className="overflow-x-auto crm-scroll pb-3">

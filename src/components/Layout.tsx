@@ -6,6 +6,7 @@ import {
   CheckSquare,
   ChevronRight,
   FolderKanban,
+  Info,
   LayoutDashboard,
   Menu,
   Search,
@@ -14,7 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
-import { NavSection } from '../types/crm';
+import { CurrencyCode, NavSection } from '../types/crm';
 import { formatCurrency } from '../utils/format';
 
 interface NavItem {
@@ -41,6 +42,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     activeSection,
     selectedClientId,
     navigateTo,
+    openAboutModal,
     clients,
     leads,
     projects,
@@ -48,6 +50,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     notifications,
     markAllNotificationsRead,
     settings,
+    updateSettings,
     toastMessage,
   } = useCRM();
 
@@ -221,34 +224,69 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           <div className="pt-4 border-t border-[#ECEAE4] space-y-0.5">
             {SECONDARY_NAV.map(renderNavButton)}
+            <button
+              type="button"
+              onClick={() => {
+                openAboutModal();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 lg:py-2 rounded-lg text-[13.5px] font-medium text-[#525866] hover:bg-[#F8F7F4] hover:text-[#1A1D24] transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <Info className="w-[16px] h-[16px] shrink-0 text-[#7A808D]" />
+              <span>About this project</span>
+            </button>
           </div>
         </nav>
       </div>
 
-      {/* Bottom Workspace Card */}
-      <button
-        type="button"
-        onClick={() => handleNavClick('settings')}
-        className="w-full px-3 py-2.5 rounded-lg border border-[#ECEAE4] bg-[#FAF9F6] hover:border-[#D5D0C6] transition-colors text-left cursor-pointer group"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[12.5px] font-semibold text-[#1A1D24] truncate">
-            {settings.workspaceName}
-          </span>
-          <ChevronRight className="w-3.5 h-3.5 text-[#A8A298] group-hover:text-[#13233A] shrink-0" />
+      {/* Bottom Workspace & Quick Currency Switcher */}
+      <div className="space-y-2.5">
+        <div className="px-1">
+          <div className="flex items-center justify-between text-[11px] text-[#7A808D] mb-1.5 px-1">
+            <span>Currency</span>
+            <span className="tabular-nums">{settings.currency}</span>
+          </div>
+          <div className="grid grid-cols-4 gap-1 bg-[#F3F1EC] p-0.5 rounded-lg border border-[#E5E2DC]">
+            {(['USD', 'NGN', 'GBP', 'EUR'] as CurrencyCode[]).map((code) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => updateSettings({ currency: code })}
+                className={`py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer ${
+                  settings.currency === code
+                    ? 'bg-white text-[#13233A] font-semibold shadow-2xs'
+                    : 'text-[#525866] hover:text-[#1A1D24]'
+                }`}
+              >
+                {code}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="text-[11px] text-[#7A808D] mt-0.5 flex items-center justify-between tabular-nums">
-          <span>{settings.planName}</span>
-          <span>{settings.currency}</span>
-        </div>
-      </button>
+
+        <button
+          type="button"
+          onClick={() => handleNavClick('settings')}
+          className="w-full px-3 py-2.5 rounded-lg border border-[#ECEAE4] bg-[#FAF9F6] hover:border-[#D5D0C6] transition-colors text-left cursor-pointer group"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[12.5px] font-semibold text-[#1A1D24] truncate">
+              {settings.workspaceName}
+            </span>
+            <ChevronRight className="w-3.5 h-3.5 text-[#A8A298] group-hover:text-[#13233A] shrink-0" />
+          </div>
+          <div className="text-[11px] text-[#7A808D] mt-0.5 truncate">
+            {settings.planName} · {settings.ownerName}
+          </div>
+        </button>
+      </div>
     </div>
   );
 
   return (
     <div className="min-h-screen flex bg-[#F8F7F4] text-[#1A1D24]">
       {/* Desktop Fixed Sidebar */}
-      <aside className="hidden lg:block w-[238px] shrink-0 sticky top-0 h-screen">
+      <aside className="hidden lg:block w-[240px] shrink-0 sticky top-0 h-screen">
         {SidebarContent}
       </aside>
 
@@ -268,19 +306,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 h-[58px] bg-white/95 backdrop-blur-xs border-b border-[#E5E2DC] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+        <header className="sticky top-0 z-30 h-[58px] bg-white/95 backdrop-blur-xs border-b border-[#E5E2DC] px-3.5 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 -ml-1.5 rounded-md text-[#525866] hover:bg-[#F3F1EC] cursor-pointer shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center"
+              className="lg:hidden p-2 -ml-1 rounded-md text-[#525866] hover:bg-[#F3F1EC] cursor-pointer shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center"
               aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             {/* Global Search */}
-            <div ref={searchRef} className="relative flex-1 max-w-md">
+            <div ref={searchRef} className="relative flex-1 max-w-md min-w-0">
               <div className="relative flex items-center">
                 <Search className="w-3.5 h-3.5 text-[#7A808D] absolute left-3 pointer-events-none" />
                 <input
@@ -293,7 +331,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     setSearchFocused(true);
                   }}
                   placeholder="Search leads, clients, projects..."
-                  className="w-full pl-8.5 pr-12 py-1.5 text-[13px] bg-[#FAF9F6] border border-[#E5E2DC] rounded-lg text-[#1A1D24] placeholder:text-[#7A808D] focus:bg-white focus:border-[#13233A] focus:outline-none transition-colors"
+                  className="w-full pl-8.5 pr-9 sm:pr-12 py-1.5 text-[13px] bg-[#FAF9F6] border border-[#E5E2DC] rounded-lg text-[#1A1D24] placeholder:text-[#7A808D] focus:bg-white focus:border-[#13233A] focus:outline-none transition-colors"
                 />
                 {searchQuery ? (
                   <button
@@ -440,7 +478,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Notification Bell */}
             <div ref={notifRef} className="relative">
               <button
@@ -456,7 +494,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#E5E2DC] rounded-lg shadow-lg z-40">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white border border-[#E5E2DC] rounded-lg shadow-lg z-40">
                   <div className="px-4 py-3 border-b border-[#ECEAE4] flex items-center justify-between">
                     <span className="text-xs font-semibold text-[#1A1D24]">
                       Notifications ({unreadCount} unread)
@@ -510,7 +548,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <button
               type="button"
               onClick={() => navigateTo('settings')}
-              className="flex items-center gap-2.5 py-1 px-1.5 rounded-lg hover:bg-[#F3F1EC] transition-colors cursor-pointer text-left"
+              className="flex items-center gap-2.5 py-1 px-1 sm:px-1.5 rounded-lg hover:bg-[#F3F1EC] transition-colors cursor-pointer text-left"
             >
               <div className="w-8 h-8 rounded-full bg-[#EFECE5] border border-[#DFDBD2] flex items-center justify-center text-xs font-semibold text-[#13233A] shrink-0">
                 {settings.ownerInitials}
@@ -528,7 +566,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </header>
 
         {/* Main Viewport */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-7 max-w-[1440px] w-full mx-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 sm:py-7 max-w-[1440px] w-full mx-auto">
           {children}
         </main>
       </div>
@@ -537,7 +575,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {toastMessage && (
         <div
           role="status"
-          className="fixed bottom-5 right-5 z-50 bg-[#13233A] text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-lg border border-white/10"
+          className="fixed bottom-4 right-4 left-4 sm:left-auto sm:bottom-5 sm:right-5 z-50 bg-[#13233A] text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-lg border border-white/10 text-center sm:text-left"
         >
           {toastMessage}
         </div>

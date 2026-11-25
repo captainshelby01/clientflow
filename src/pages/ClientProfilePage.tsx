@@ -396,9 +396,9 @@ export const ClientProfilePage: React.FC<{ clientId: string }> = ({ clientId }) 
         </div>
 
         {/* Right Workspace: Communication Timeline, Notes, Files */}
-        <div className="lg:col-span-8 space-y-5">
+        <div className="lg:col-span-8 space-y-5 min-w-0">
           {/* Sub-tabs */}
-          <div className="flex items-center gap-6 border-b border-[#E5E2DC]">
+          <div className="flex items-center gap-4 sm:gap-6 border-b border-[#E5E2DC] overflow-x-auto crm-scroll">
             {[
               { id: 'overview', label: `Communication timeline (${client.timeline.length})` },
               { id: 'notes', label: `Notes (${client.notes.length})` },
@@ -408,7 +408,7 @@ export const ClientProfilePage: React.FC<{ clientId: string }> = ({ clientId }) 
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`pb-3 text-[13px] font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+                className={`pb-3 text-[13px] font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
                     ? 'border-[#13233A] text-[#13233A] font-semibold'
                     : 'border-transparent text-[#525866] hover:text-[#1A1D24]'

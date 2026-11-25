@@ -39,7 +39,7 @@ interface PersistedState {
   settings: WorkspaceSettings;
 }
 
-const STORAGE_KEY = 'clientflow_crm_state_v1';
+const STORAGE_KEY = 'clientflow_crm_state_v2';
 
 function loadInitialState(): PersistedState {
   try {
@@ -90,10 +90,14 @@ interface CRMContextValue extends PersistedState {
   leadStageFilter: LeadStage | 'All';
   isAddLeadOpen: boolean;
   isAddClientOpen: boolean;
+  isAboutOpen: boolean;
   followUpModalTarget: ScheduleFollowUpTarget | null;
   toastMessage: string | null;
 
-  navigateTo: (section: NavSection, options?: { clientId?: string | null; leadId?: string | null; stageFilter?: LeadStage | 'All' }) => void;
+  navigateTo: (
+    section: NavSection,
+    options?: { clientId?: string | null; leadId?: string | null; stageFilter?: LeadStage | 'All' }
+  ) => void;
   setSelectedClientId: (id: string | null) => void;
   setSelectedLeadId: (id: string | null) => void;
   setLeadStageFilter: (stage: LeadStage | 'All') => void;
@@ -101,6 +105,8 @@ interface CRMContextValue extends PersistedState {
   closeAddLeadModal: () => void;
   openAddClientModal: () => void;
   closeAddClientModal: () => void;
+  openAboutModal: () => void;
+  closeAboutModal: () => void;
   openFollowUpModal: (target: ScheduleFollowUpTarget) => void;
   closeFollowUpModal: () => void;
   showToast: (msg: string) => void;
@@ -144,6 +150,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [leadStageFilter, setLeadStageFilter] = useState<LeadStage | 'All'>('All');
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [followUpModalTarget, setFollowUpModalTarget] = useState<ScheduleFollowUpTarget | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -257,6 +264,22 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!lead) return null;
     if (lead.convertedClientId) {
       return lead.convertedClientId;
+    }
+
+    const existingCompanyClient = state.clients.find(
+      (c) => c.company.toLowerCase() === lead.company.toLowerCase()
+    );
+    if (existingCompanyClient) {
+      setState((prev) => ({
+        ...prev,
+        leads: prev.leads.map((l) =>
+          l.id === leadId
+            ? { ...l, stage: 'Won', probability: 100, convertedClientId: existingCompanyClient.id }
+            : l
+        ),
+      }));
+      showToast(`Linked ${lead.name} to ${existingCompanyClient.company}`);
+      return existingCompanyClient.id;
     }
 
     const newClientId = `cli-${Date.now()}`;
@@ -725,6 +748,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         leadStageFilter,
         isAddLeadOpen,
         isAddClientOpen,
+        isAboutOpen,
         followUpModalTarget,
         toastMessage,
         navigateTo,
@@ -735,6 +759,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         closeAddLeadModal: () => setIsAddLeadOpen(false),
         openAddClientModal: () => setIsAddClientOpen(true),
         closeAddClientModal: () => setIsAddClientOpen(false),
+        openAboutModal: () => setIsAboutOpen(true),
+        closeAboutModal: () => setIsAboutOpen(false),
         openFollowUpModal: (target) => setFollowUpModalTarget(target),
         closeFollowUpModal: () => setFollowUpModalTarget(null),
         showToast,

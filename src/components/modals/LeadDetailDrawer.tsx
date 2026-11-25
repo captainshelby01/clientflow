@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, CheckCircle2, Mail, Phone, Trash2, UserCheck, X } from 'lucide-react';
+import { Calendar, Mail, Phone, Trash2, UserCheck, Users, X } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import { LEAD_STAGES, LeadStage } from '../../types/crm';
 import { formatCurrency, formatDisplayDate } from '../../utils/format';
@@ -7,6 +7,7 @@ import { formatCurrency, formatDisplayDate } from '../../utils/format';
 export const LeadDetailDrawer: React.FC = () => {
   const {
     leads,
+    clients,
     selectedLeadId,
     setSelectedLeadId,
     moveLeadStage,
@@ -32,6 +33,12 @@ export const LeadDetailDrawer: React.FC = () => {
 
   if (!lead) return null;
 
+  // Resolve any existing linked or matching-company client
+  const linkedClient =
+    (lead.convertedClientId && clients.find((c) => c.id === lead.convertedClientId)) ||
+    clients.find((c) => c.company.toLowerCase() === lead.company.toLowerCase()) ||
+    null;
+
   const handleSaveNotes = () => {
     if (!noteDraft.trim()) return;
     const prefix = lead.notes ? `${lead.notes}\n\n` : '';
@@ -39,7 +46,12 @@ export const LeadDetailDrawer: React.FC = () => {
     setNoteDraft('');
   };
 
-  const handleConvert = () => {
+  const handleViewOrConvertClient = () => {
+    if (linkedClient) {
+      setSelectedLeadId(null);
+      navigateTo('clients', { clientId: linkedClient.id });
+      return;
+    }
     const clientId = convertLeadToClient(lead.id);
     setSelectedLeadId(null);
     if (clientId) {
@@ -156,7 +168,26 @@ export const LeadDetailDrawer: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 pb-5 border-b border-[#ECEAE4]">
+            {/* Primary Lead Actions */}
+            <div className="flex flex-wrap gap-2.5 pb-5 border-b border-[#ECEAE4]">
+              <button
+                type="button"
+                onClick={handleViewOrConvertClient}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-[#13233A] text-white rounded-lg hover:bg-[#1D3454] cursor-pointer whitespace-nowrap shrink-0"
+              >
+                {linkedClient ? (
+                  <>
+                    <Users className="w-3.5 h-3.5" />
+                    View Client Profile
+                  </>
+                ) : (
+                  <>
+                    <UserCheck className="w-3.5 h-3.5" />
+                    Convert & View Client Profile
+                  </>
+                )}
+              </button>
+
               <button
                 type="button"
                 onClick={() =>
@@ -167,35 +198,11 @@ export const LeadDetailDrawer: React.FC = () => {
                     company: lead.company,
                   })
                 }
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-white border border-[#E5E2DC] text-[#1A1D24] rounded-lg hover:bg-[#FAF9F6] cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-white border border-[#E5E2DC] text-[#1A1D24] rounded-lg hover:bg-[#FAF9F6] cursor-pointer whitespace-nowrap shrink-0"
               >
                 <Calendar className="w-3.5 h-3.5 text-[#B4690E]" />
                 Schedule Follow-up
               </button>
-
-              {lead.convertedClientId ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const cid = lead.convertedClientId!;
-                    setSelectedLeadId(null);
-                    navigateTo('clients', { clientId: cid });
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#F3F1EC] text-[#13233A] rounded-lg hover:bg-[#E8E5DD] cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                  View Client Profile
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleConvert}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#13233A] text-white rounded-lg hover:bg-[#1D3454] cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  Convert to Client
-                </button>
-              )}
             </div>
 
             <div>
