@@ -40,14 +40,7 @@ function getGeminiClient(): GoogleGenAI | null {
   if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
     return null;
   }
-  return new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
-  });
+  return new GoogleGenAI({ apiKey });
 }
 
 async function generateWithRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T> {
@@ -113,7 +106,7 @@ async function startServer() {
     if (!ai) {
       res.status(503).json({
         error:
-          'Gemini API key is not configured yet. Add GEMINI_API_KEY in Settings > Secrets to enable AI drafting.',
+          'Gemini API key is not configured yet. Set GEMINI_API_KEY in your environment to enable AI drafting.',
       });
       return;
     }
@@ -207,7 +200,7 @@ async function startServer() {
 
       if (status === 400 || status === 403) {
         res.status(status).json({
-          error: 'Gemini API request was rejected. Please verify your GEMINI_API_KEY in Settings > Secrets.',
+          error: 'Gemini API request was rejected. Please verify your GEMINI_API_KEY environment variable.',
         });
         return;
       }

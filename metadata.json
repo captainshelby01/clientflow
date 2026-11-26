@@ -1,8 +1,0 @@
-{
-  "name": "ClientFlow",
-  "description": "A focused, practical CRM workspace for freelancers, consultants, and small creative agencies.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
