@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, Mail, Phone, Trash2, UserCheck, Users, X } from 'lucide-react';
+import { Calendar, Mail, Phone, Sparkles, Trash2, UserCheck, Users, X } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import { LEAD_STAGES, LeadStage } from '../../types/crm';
 import { formatCurrency, formatDisplayDate } from '../../utils/format';
@@ -15,6 +15,7 @@ export const LeadDetailDrawer: React.FC = () => {
     convertLeadToClient,
     deleteLead,
     openFollowUpModal,
+    openAIDraftModal,
     navigateTo,
     settings,
   } = useCRM();
@@ -202,6 +203,32 @@ export const LeadDetailDrawer: React.FC = () => {
               >
                 <Calendar className="w-3.5 h-3.5 text-[#B4690E]" />
                 Schedule Follow-up
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  openAIDraftModal({
+                    targetType: 'lead',
+                    targetId: lead.id,
+                    initialMode:
+                      lead.stage === 'Proposal Sent' || lead.stage === 'Negotiation'
+                        ? 'proposal'
+                        : 'follow_up',
+                    recipientName: lead.name,
+                    recipientRole: lead.role,
+                    company: lead.company,
+                    industry: lead.industry,
+                    scope: lead.serviceScope,
+                    dealValue: lead.value,
+                    stageOrStatus: lead.stage,
+                    recentContext: lead.notes,
+                  })
+                }
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-white border border-[#E5E2DC] text-[#1A1D24] rounded-lg hover:bg-[#FAF9F6] cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#B4690E]" />
+                Draft with AI
               </button>
             </div>
 

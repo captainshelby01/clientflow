@@ -44,6 +44,31 @@ export function getInitials(name: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
+export function getTodayISO(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function addDaysISO(days: number, base: Date = new Date()): string {
+  const next = new Date(base);
+  next.setDate(next.getDate() + days);
+  return getTodayISO(next);
+}
+
+export function formatLongHeaderDate(date: Date = new Date()): string {
+  return date.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+export function getCurrentTimeHHMM(date: Date = new Date()): string {
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
 export function formatDisplayDate(isoDate: string): string {
   if (!isoDate) return '—';
   const parsed = new Date(`${isoDate}T00:00:00`);

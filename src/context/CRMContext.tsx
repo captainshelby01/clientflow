@@ -9,8 +9,9 @@ import {
   INITIAL_PROJECTS,
   INITIAL_SETTINGS,
   INITIAL_TASKS,
-  TODAY_ISO,
 } from '../data/initialData';
+import { addDaysISO, getCurrentTimeHHMM, getTodayISO } from '../utils/format';
+import { buildUrlFromRoute, parseRouteFromLocation, RouteState } from '../utils/routing';
 import {
   ActivityItem,
   Client,
@@ -83,6 +84,20 @@ export interface ScheduleFollowUpTarget {
   company: string;
 }
 
+export interface AIDraftTarget {
+  targetType: 'client' | 'lead';
+  targetId: string;
+  initialMode?: 'follow_up' | 'proposal';
+  recipientName: string;
+  recipientRole: string;
+  company: string;
+  industry: string;
+  scope: string;
+  dealValue: number;
+  stageOrStatus: string;
+  recentContext: string;
+}
+
 interface CRMContextValue extends PersistedState {
   activeSection: NavSection;
   selectedClientId: string | null;
@@ -92,6 +107,7 @@ interface CRMContextValue extends PersistedState {
   isAddClientOpen: boolean;
   isAboutOpen: boolean;
   followUpModalTarget: ScheduleFollowUpTarget | null;
+  aiDraftTarget: AIDraftTarget | null;
   toastMessage: string | null;
 
   navigateTo: (
@@ -109,6 +125,8 @@ interface CRMContextValue extends PersistedState {
   closeAboutModal: () => void;
   openFollowUpModal: (target: ScheduleFollowUpTarget) => void;
   closeFollowUpModal: () => void;
+  openAIDraftModal: (target: AIDraftTarget) => void;
+  closeAIDraftModal: () => void;
   showToast: (msg: string) => void;
 
   addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void;
@@ -144,14 +162,20 @@ const CRMContext = createContext<CRMContextValue | null>(null);
 
 export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<PersistedState>(loadInitialState);
-  const [activeSection, setActiveSection] = useState<NavSection>('dashboard');
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [leadStageFilter, setLeadStageFilter] = useState<LeadStage | 'All'>('All');
+  const initialRoute =
+    typeof window !== 'undefined'
+      ? parseRouteFromLocation(window.location.pathname, window.location.search)
+      : { section: 'dashboard' as NavSection, clientId: null, leadId: null, stageFilter: 'All' as const };
+
+  const [activeSection, setActiveSection] = useState<NavSection>(initialRoute.section);
+  const [selectedClientId, setSelectedClientIdState] = useState<string | null>(initialRoute.clientId);
+  const [selectedLeadId, setSelectedLeadIdState] = useState<string | null>(initialRoute.leadId);
+  const [leadStageFilter, setLeadStageFilterState] = useState<LeadStage | 'All'>(initialRoute.stageFilter);
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [followUpModalTarget, setFollowUpModalTarget] = useState<ScheduleFollowUpTarget | null>(null);
+  const [aiDraftTarget, setAIDraftTarget] = useState<AIDraftTarget | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -163,6 +187,18 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [state]);
 
   useEffect(() => {
+    const handlePopState = () => {
+      const next = parseRouteFromLocation(window.location.pathname, window.location.search);
+      setActiveSection(next.section);
+      setSelectedClientIdState(next.clientId);
+      setSelectedLeadIdState(next.leadId);
+      setLeadStageFilterState(next.stageFilter);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
     if (!toastMessage) return;
     const timer = setTimeout(() => setToastMessage(null), 3200);
     return () => clearTimeout(timer);
@@ -170,23 +206,92 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const showToast = (msg: string) => setToastMessage(msg);
 
+  const syncUrl = (nextRoute: RouteState, replace = false) => {
+    if (typeof window === 'undefined') return;
+    const nextUrl = buildUrlFromRoute(nextRoute);
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (nextUrl !== currentUrl) {
+      if (replace) {
+        window.history.replaceState(null, '', nextUrl);
+      } else {
+        window.history.pushState(null, '', nextUrl);
+      }
+    }
+  };
+
   const navigateTo = (
     section: NavSection,
     options?: { clientId?: string | null; leadId?: string | null; stageFilter?: LeadStage | 'All' }
   ) => {
+    const nextClientId =
+      options && 'clientId' in options
+        ? options.clientId ?? null
+        : section !== 'clients'
+          ? null
+          : selectedClientId;
+
+    const nextLeadId =
+      options && 'leadId' in options
+        ? options.leadId ?? null
+        : section !== 'leads'
+          ? null
+          : selectedLeadId;
+
+    const nextStageFilter =
+      options?.stageFilter ?? (section === 'leads' ? 'All' : leadStageFilter);
+
     setActiveSection(section);
-    if (options && 'clientId' in options) {
-      setSelectedClientId(options.clientId ?? null);
-    } else if (section !== 'clients') {
-      setSelectedClientId(null);
+    setSelectedClientIdState(nextClientId);
+    setSelectedLeadIdState(nextLeadId);
+    setLeadStageFilterState(nextStageFilter);
+
+    syncUrl({
+      section,
+      clientId: nextClientId,
+      leadId: nextLeadId,
+      stageFilter: nextStageFilter,
+    });
+  };
+
+  const setSelectedClientId = (id: string | null) => {
+    setSelectedClientIdState(id);
+    if (activeSection === 'clients') {
+      syncUrl({
+        section: 'clients',
+        clientId: id,
+        leadId: null,
+        stageFilter: leadStageFilter,
+      });
     }
-    if (options && 'leadId' in options) {
-      setSelectedLeadId(options.leadId ?? null);
+  };
+
+  const setSelectedLeadId = (id: string | null) => {
+    setSelectedLeadIdState(id);
+    if (activeSection === 'leads') {
+      syncUrl(
+        {
+          section: 'leads',
+          clientId: null,
+          leadId: id,
+          stageFilter: leadStageFilter,
+        },
+        true
+      );
     }
-    if (options?.stageFilter) {
-      setLeadStageFilter(options.stageFilter);
-    } else if (section === 'leads' && !options?.stageFilter) {
-      setLeadStageFilter('All');
+  };
+
+  const setLeadStageFilter = (stage: LeadStage | 'All') => {
+    setLeadStageFilterState(stage);
+    if (activeSection === 'leads') {
+      syncUrl(
+        {
+          section: 'leads',
+          clientId: null,
+          leadId: selectedLeadId,
+          stageFilter: stage,
+        },
+        true
+      );
     }
   };
 
@@ -203,7 +308,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newLead: Lead = {
       ...leadData,
       id: newId,
-      createdAt: TODAY_ISO,
+      createdAt: getTodayISO(),
     };
     setState((prev) => ({
       ...prev,
@@ -282,6 +387,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return existingCompanyClient.id;
     }
 
+    const today = getTodayISO();
+    const currentTime = getCurrentTimeHHMM();
     const newClientId = `cli-${Date.now()}`;
     const newClient: Client = {
       id: newClientId,
@@ -297,7 +404,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       billingTerms: 'Net 15 · 50% upfront',
       preferredChannel: 'Video Call',
       status: 'Onboarding',
-      lastContactDate: TODAY_ISO,
+      lastContactDate: today,
       totalValue: lead.value,
       tags: [lead.serviceScope.split(' ')[0] || 'Advisory'],
       notes: lead.notes
@@ -306,7 +413,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               id: `note-${Date.now()}`,
               content: lead.notes,
               author: state.settings.ownerName,
-              createdAt: `${TODAY_ISO} · Converted from lead`,
+              createdAt: `${today} · Converted from lead`,
               pinned: true,
             },
           ]
@@ -318,8 +425,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           type: 'Proposal',
           title: 'Converted from Won deal',
           summary: `${lead.serviceScope} signed and moved into client onboarding.`,
-          date: TODAY_ISO,
-          time: '09:00',
+          date: today,
+          time: currentTime,
           author: state.settings.ownerName,
         },
       ],
@@ -335,13 +442,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       phase: 'Kickoff & Discovery',
       budget: lead.value,
       billed: Math.round(lead.value * 0.5),
-      startDate: TODAY_ISO,
-      dueDate: lead.expectedCloseDate || '2027-01-15',
+      startDate: today,
+      dueDate: lead.expectedCloseDate || addDaysISO(45),
       progress: 10,
       summary: `Initial engagement converted from ${lead.source} pipeline deal.`,
       deliverables: ['Discovery Brief', 'Core Deliverables'],
       milestones: [
-        { id: `ms-${Date.now()}-1`, title: 'Kickoff & asset collection', dueDate: TODAY_ISO, completed: false },
+        { id: `ms-${Date.now()}-1`, title: 'Kickoff & asset collection', dueDate: today, completed: false },
       ],
     };
 
@@ -376,6 +483,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addClient = (clientData: Omit<Client, 'id' | 'notes' | 'files' | 'timeline'>): string => {
     const newId = `cli-${Date.now()}`;
+    const today = getTodayISO();
     const newClient: Client = {
       ...clientData,
       id: newId,
@@ -387,8 +495,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           type: 'Note',
           title: 'Client profile created',
           summary: `Added ${clientData.name} (${clientData.company}) to ClientFlow.`,
-          date: TODAY_ISO,
-          time: '09:00',
+          date: today,
+          time: getCurrentTimeHHMM(),
           author: state.settings.ownerName,
         },
       ],
@@ -417,8 +525,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addClientNote = (clientId: string, content: string, pinned = false) => {
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const today = getTodayISO();
+    const timeStr = getCurrentTimeHHMM();
     setState((prev) => ({
       ...prev,
       clients: prev.clients.map((c) =>
@@ -430,7 +538,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   id: `note-${Date.now()}`,
                   content,
                   author: prev.settings.ownerName,
-                  createdAt: `${TODAY_ISO} · ${timeStr}`,
+                  createdAt: `${today} · ${timeStr}`,
                   pinned,
                 },
                 ...c.notes,
@@ -460,6 +568,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clientId: string,
     file: Omit<ClientFile, 'id' | 'uploadedAt' | 'uploadedBy'>
   ) => {
+    const today = getTodayISO();
     setState((prev) => ({
       ...prev,
       clients: prev.clients.map((c) =>
@@ -470,7 +579,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 {
                   ...file,
                   id: `file-${Date.now()}`,
-                  uploadedAt: TODAY_ISO,
+                  uploadedAt: today,
                   uploadedBy: prev.settings.ownerName,
                 },
                 ...c.files,
@@ -486,6 +595,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clientId: string,
     entry: Omit<CommunicationEntry, 'id' | 'author'>
   ) => {
+    const today = getTodayISO();
     setState((prev) => {
       const client = prev.clients.find((c) => c.id === clientId);
       return {
@@ -494,7 +604,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           c.id === clientId
             ? {
                 ...c,
-                lastContactDate: entry.date || TODAY_ISO,
+                lastContactDate: entry.date || today,
                 timeline: [
                   {
                     ...entry,
@@ -538,6 +648,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       linkedLabel: input.company,
     };
 
+    const today = getTodayISO();
     setState((prev) => {
       const updatedClients =
         input.targetType === 'client'
@@ -551,8 +662,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         type: 'Meeting' as const,
                         title: `Scheduled ${input.channel.toLowerCase()} follow-up`,
                         summary: `${input.date} at ${input.time} · ${input.agenda}`,
-                        date: TODAY_ISO,
-                        time: 'Now',
+                        date: today,
+                        time: getCurrentTimeHHMM(),
                         author: prev.settings.ownerName,
                       },
                       ...c.timeline,
@@ -590,6 +701,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const completeFollowUp = (followUpId: string) => {
+    const today = getTodayISO();
     setState((prev) => {
       const target = prev.followUps.find((f) => f.id === followUpId);
       return {
@@ -600,7 +712,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clients:
           target && target.targetType === 'client' && !target.completed
             ? prev.clients.map((c) =>
-                c.id === target.targetId ? { ...c, lastContactDate: TODAY_ISO } : c
+                c.id === target.targetId ? { ...c, lastContactDate: today } : c
               )
             : prev.clients,
       };
@@ -733,8 +845,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notifications: INITIAL_NOTIFICATIONS,
       settings: INITIAL_SETTINGS,
     });
-    setSelectedClientId(null);
-    setSelectedLeadId(null);
+    setSelectedClientIdState(null);
+    setSelectedLeadIdState(null);
+    syncUrl({ section: activeSection, clientId: null, leadId: null, stageFilter: leadStageFilter }, true);
     showToast('Workspace reset to default sample data');
   };
 
@@ -750,6 +863,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isAddClientOpen,
         isAboutOpen,
         followUpModalTarget,
+        aiDraftTarget,
         toastMessage,
         navigateTo,
         setSelectedClientId,
@@ -763,6 +877,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         closeAboutModal: () => setIsAboutOpen(false),
         openFollowUpModal: (target) => setFollowUpModalTarget(target),
         closeFollowUpModal: () => setFollowUpModalTarget(null),
+        openAIDraftModal: (target) => setAIDraftTarget(target),
+        closeAIDraftModal: () => setAIDraftTarget(null),
         showToast,
         addLead,
         updateLead,

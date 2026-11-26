@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import { LEAD_STAGES, Lead, LeadStage } from '../../types/crm';
-import { TODAY_ISO } from '../../data/initialData';
+import { addDaysISO, getTodayISO } from '../../utils/format';
 
 export const AddLeadModal: React.FC = () => {
   const { isAddLeadOpen, closeAddLeadModal, addLead, settings } = useCRM();
@@ -17,8 +17,8 @@ export const AddLeadModal: React.FC = () => {
   const [value, setValue] = useState('12000');
   const [stage, setStage] = useState<LeadStage>('New Lead');
   const [source, setSource] = useState<Lead['source']>('Referral');
-  const [expectedCloseDate, setExpectedCloseDate] = useState('2026-12-18');
-  const [nextFollowUpDate, setNextFollowUpDate] = useState(TODAY_ISO);
+  const [expectedCloseDate, setExpectedCloseDate] = useState(() => addDaysISO(21));
+  const [nextFollowUpDate, setNextFollowUpDate] = useState(() => getTodayISO());
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 

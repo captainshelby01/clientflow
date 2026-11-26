@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Check, Plus, Trash2 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
-import { TODAY_ISO } from '../data/initialData';
 import { TaskItem } from '../types/crm';
-import { formatDisplayDate } from '../utils/format';
+import { formatDisplayDate, getTodayISO } from '../utils/format';
 
 export const TasksPage: React.FC = () => {
   const { tasks, clients, addTask, toggleTask, deleteTask, navigateTo } = useCRM();
@@ -14,7 +13,8 @@ export const TasksPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<TaskItem['category']>('Follow-up');
   const [priority, setPriority] = useState<TaskItem['priority']>('High');
-  const [dueDate, setDueDate] = useState(TODAY_ISO);
+  const todayISO = getTodayISO();
+  const [dueDate, setDueDate] = useState(() => getTodayISO());
   const [dueTime, setDueTime] = useState('10:00');
   const [linkedClientId, setLinkedClientId] = useState<string>('');
 
@@ -22,14 +22,14 @@ export const TasksPage: React.FC = () => {
     return tasks
       .filter((t) => {
         if (filter === 'Completed') return t.completed;
-        if (filter === 'Today') return !t.completed && t.dueDate === TODAY_ISO;
-        if (filter === 'Overdue') return !t.completed && t.dueDate < TODAY_ISO;
-        if (filter === 'Upcoming') return !t.completed && t.dueDate > TODAY_ISO;
+        if (filter === 'Today') return !t.completed && t.dueDate === todayISO;
+        if (filter === 'Overdue') return !t.completed && t.dueDate < todayISO;
+        if (filter === 'Upcoming') return !t.completed && t.dueDate > todayISO;
         return true;
       })
       .filter((t) => priorityFilter === 'All' || t.priority === priorityFilter)
       .sort((a, b) => Number(a.completed) - Number(b.completed) || a.dueDate.localeCompare(b.dueDate));
-  }, [tasks, filter, priorityFilter]);
+  }, [tasks, filter, priorityFilter, todayISO]);
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +64,7 @@ export const TasksPage: React.FC = () => {
           </h1>
           <p className="text-[13.5px] text-[#525866] mt-1 tabular-nums">
             {tasks.filter((t) => !t.completed).length} open ·{' '}
-            {tasks.filter((t) => !t.completed && t.dueDate < TODAY_ISO).length} overdue ·{' '}
+            {tasks.filter((t) => !t.completed && t.dueDate < todayISO).length} overdue ·{' '}
             {tasks.filter((t) => t.completed).length} completed
           </p>
         </div>
@@ -206,7 +206,7 @@ export const TasksPage: React.FC = () => {
       {/* Task List */}
       <div className="bg-white border border-[#E5E2DC] rounded-[10px] divide-y divide-[#ECEAE4]">
         {filteredTasks.map((task) => {
-          const isOverdue = !task.completed && task.dueDate < TODAY_ISO;
+          const isOverdue = !task.completed && task.dueDate < todayISO;
           return (
             <div
               key={task.id}

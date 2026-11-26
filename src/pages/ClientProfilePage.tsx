@@ -13,11 +13,11 @@ import {
   Pin,
   Plus,
   Send,
+  Sparkles,
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
 import { ClientFile, ClientStatus, CommunicationEntry } from '../types/crm';
-import { formatCurrency, formatDisplayDate, getInitials } from '../utils/format';
-import { TODAY_ISO } from '../data/initialData';
+import { formatCurrency, formatDisplayDate, getCurrentTimeHHMM, getInitials, getTodayISO } from '../utils/format';
 
 export const ClientProfilePage: React.FC<{ clientId: string }> = ({ clientId }) => {
   const {
@@ -32,6 +32,7 @@ export const ClientProfilePage: React.FC<{ clientId: string }> = ({ clientId }) 
     addClientFile,
     logCommunication,
     openFollowUpModal,
+    openAIDraftModal,
     completeFollowUp,
     showToast,
   } = useCRM();
@@ -82,13 +83,12 @@ export const ClientProfilePage: React.FC<{ clientId: string }> = ({ clientId }) 
   const handleLogCommunication = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commTitle.trim()) return;
-    const now = new Date();
-    const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const time = getCurrentTimeHHMM();
     logCommunication(client.id, {
       type: commType,
       title: commTitle.trim(),
       summary: commSummary.trim() || 'Logged directly from client timeline.',
-      date: TODAY_ISO,
+      date: getTodayISO(),
       time,
     });
     setCommTitle('');
@@ -173,6 +173,40 @@ export const ClientProfilePage: React.FC<{ clientId: string }> = ({ clientId }) 
               <option value="Onboarding">Onboarding</option>
               <option value="Past">Past</option>
             </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                const recentTimeline = client.timeline
+                  .slice(0, 3)
+                  .map((t) => `${t.date} (${t.type}): ${t.title} — ${t.summary}`)
+                  .join('\n');
+                const recentNotes = client.notes
+                  .slice(0, 2)
+                  .map((n) => n.content)
+                  .join(' | ');
+                openAIDraftModal({
+                  targetType: 'client',
+                  targetId: client.id,
+                  initialMode: 'follow_up',
+                  recipientName: client.name,
+                  recipientRole: client.role,
+                  company: client.company,
+                  industry: client.industry,
+                  scope:
+                    activeProjects[0]?.title ||
+                    client.tags.join(', ') ||
+                    'Consulting & Design Retainer',
+                  dealValue: client.totalValue,
+                  stageOrStatus: client.status,
+                  recentContext: [recentNotes, recentTimeline].filter(Boolean).join('\n'),
+                });
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-white border border-[#E5E2DC] text-[#1A1D24] rounded-lg hover:bg-[#FAF9F6] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#B4690E]" />
+              Draft with AI
+            </button>
 
             <button
               type="button"

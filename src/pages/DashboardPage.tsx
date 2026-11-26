@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Calendar, Check, Plus } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
-import { formatCurrency, formatShortDate, getInitials } from '../utils/format';
+import { addDaysISO, formatCurrency, formatLongHeaderDate, formatShortDate, getInitials, getTodayISO } from '../utils/format';
 import { RevenueChart } from '../components/charts/RevenueChart';
 import { PipelineChart } from '../components/charts/PipelineChart';
-import { TODAY_ISO } from '../data/initialData';
 
 export const DashboardPage: React.FC = () => {
   const {
@@ -25,11 +24,14 @@ export const DashboardPage: React.FC = () => {
 
   const [chartRange, setChartRange] = useState<'6m' | '12m'>('6m');
 
+  const todayISO = getTodayISO();
+  const tenDaysFromNowISO = addDaysISO(10);
+
   // Computed KPI values
   const totalClients = clients.length;
   const activeClientsCount = clients.filter((c) => c.status !== 'Past').length;
   const activeProjects = projects.filter((p) => p.status !== 'Completed');
-  const dueSoonProjects = activeProjects.filter((p) => p.dueDate <= '2026-12-05').length;
+  const dueSoonProjects = activeProjects.filter((p) => p.dueDate <= tenDaysFromNowISO).length;
 
   const openLeads = leads.filter((l) => l.stage !== 'Won' && l.stage !== 'Lost');
   const pipelineValue = openLeads.reduce((sum, l) => sum + l.value, 0);
@@ -40,14 +42,15 @@ export const DashboardPage: React.FC = () => {
     prevMonth && prevMonth.revenue > 0
       ? Math.round(((currentMonth.revenue - prevMonth.revenue) / prevMonth.revenue) * 100)
       : 0;
+  const prevMonthLabel = prevMonth ? prevMonth.fullMonth.split(' ')[0] : 'last month';
 
   const pendingFollowUps = followUps
     .filter((f) => !f.completed)
     .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
-  const dueTodayFollowUpsCount = pendingFollowUps.filter((f) => f.date <= TODAY_ISO).length;
+  const dueTodayFollowUpsCount = pendingFollowUps.filter((f) => f.date <= todayISO).length;
   const openTasks = tasks.filter((t) => !t.completed);
-  const dueTodayTasksCount = openTasks.filter((t) => t.dueDate <= TODAY_ISO).length;
+  const dueTodayTasksCount = openTasks.filter((t) => t.dueDate <= todayISO).length;
 
   const firstName = settings.ownerName.split(' ')[0] || 'Oluwafemi';
 
@@ -60,7 +63,7 @@ export const DashboardPage: React.FC = () => {
             Good morning, {firstName}
           </h1>
           <p className="text-[13.5px] text-[#525866] mt-1">
-            Wednesday, 25 November ·{' '}
+            {formatLongHeaderDate()} ·{' '}
             <span className="font-medium text-[#1A1D24] tabular-nums">
               {dueTodayFollowUpsCount} follow-up{dueTodayFollowUpsCount === 1 ? '' : 's'}
             </span>{' '}
@@ -159,7 +162,7 @@ export const DashboardPage: React.FC = () => {
               {formatCurrency(currentMonth.revenue, settings.currency, true)}
             </div>
             <div className="text-[11.5px] text-emerald-700 mt-1 tabular-nums">
-              {monthlyGrowthPct >= 0 ? `+${monthlyGrowthPct}%` : `${monthlyGrowthPct}%`} vs October
+              {monthlyGrowthPct >= 0 ? `+${monthlyGrowthPct}%` : `${monthlyGrowthPct}%`} vs {prevMonthLabel}
             </div>
           </button>
         </div>
@@ -199,7 +202,7 @@ export const DashboardPage: React.FC = () => {
 
           <div className="divide-y divide-[#ECEAE4] flex-1">
             {pendingFollowUps.slice(0, 4).map((fu) => {
-              const isToday = fu.date <= TODAY_ISO;
+              const isToday = fu.date <= todayISO;
 
               return (
                 <div
@@ -291,7 +294,7 @@ export const DashboardPage: React.FC = () => {
 
           <div className="divide-y divide-[#ECEAE4] flex-1">
             {tasks.slice(0, 5).map((task) => {
-              const isOverdue = !task.completed && task.dueDate < TODAY_ISO;
+              const isOverdue = !task.completed && task.dueDate < todayISO;
               return (
                 <div
                   key={task.id}

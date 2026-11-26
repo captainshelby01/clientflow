@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, X } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
-import { TODAY_ISO } from '../../data/initialData';
 import { FollowUp } from '../../types/crm';
+import { getTodayISO } from '../../utils/format';
 
 export const ScheduleFollowUpModal: React.FC = () => {
   const { followUpModalTarget, closeFollowUpModal, scheduleFollowUp } = useCRM();
 
-  const [date, setDate] = useState(TODAY_ISO);
+  const [date, setDate] = useState(() => getTodayISO());
   const [time, setTime] = useState('10:00');
   const [channel, setChannel] = useState<FollowUp['channel']>('Video Call');
   const [agenda, setAgenda] = useState('');
 
   useEffect(() => {
     if (!followUpModalTarget) return;
+    setDate(getTodayISO());
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeFollowUpModal();
     };

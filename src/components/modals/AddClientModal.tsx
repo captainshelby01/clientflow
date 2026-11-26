@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import { ClientStatus } from '../../types/crm';
-import { TODAY_ISO } from '../../data/initialData';
+import { getTodayISO } from '../../utils/format';
 
 export const AddClientModal: React.FC = () => {
   const { isAddClientOpen, closeAddClientModal, addClient, navigateTo } = useCRM();
@@ -47,7 +47,7 @@ export const AddClientModal: React.FC = () => {
       billingTerms: billingTerms.trim() || 'Net 15',
       preferredChannel: 'Email',
       status,
-      lastContactDate: TODAY_ISO,
+      lastContactDate: getTodayISO(),
       totalValue: Math.max(0, Number(totalValue) || 0),
       tags: ['Advisory'],
     });

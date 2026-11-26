@@ -2,8 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronUp, Plus, Search, X } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
 import { Project } from '../types/crm';
-import { formatCurrency, formatDisplayDate } from '../utils/format';
-import { TODAY_ISO } from '../data/initialData';
+import { formatCurrency, formatDisplayDate, getTodayISO, addDaysISO } from '../utils/format';
 
 export const ProjectsPage: React.FC = () => {
   const {
@@ -24,7 +23,7 @@ export const ProjectsPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [clientId, setClientId] = useState(clients[0]?.id ?? '');
   const [budget, setBudget] = useState('15000');
-  const [dueDate, setDueDate] = useState('2027-01-15');
+  const [dueDate, setDueDate] = useState(() => addDaysISO(45));
   const [phase, setPhase] = useState('Discovery & Strategy');
   const [summary, setSummary] = useState('');
 
@@ -69,7 +68,7 @@ export const ProjectsPage: React.FC = () => {
       phase: phase.trim() || 'Discovery',
       budget: Math.max(0, Number(budget) || 0),
       billed: 0,
-      startDate: TODAY_ISO,
+      startDate: getTodayISO(),
       dueDate,
       progress: 0,
       summary: summary.trim() || `Client engagement for ${client.company}.`,
